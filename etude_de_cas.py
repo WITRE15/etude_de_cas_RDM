@@ -4,7 +4,7 @@ from scipy.integrate import cumtrapz
 from ast import literal_eval
 from shapely.geometry import Polygon
 
-show_plot = True
+show_plot = False
 save_figs = True
 
 calculer_corde_aile = lambda longueur : -longueur*(133/755) + 0.606
@@ -12,6 +12,9 @@ calculer_corde_aile = lambda longueur : -longueur*(133/755) + 0.606
 calculer_contrainte_normale = lambda M, I, C, :-(M*C)/(I)
 
 calculer_contrainte_cisaillement = lambda V, Q, I, t : (V*Q)/(I*t)
+
+calculer_erreurs = lambda x, x_tilde : (abs(x - x_tilde), abs((x-x_tilde)/x)*100)
+
 #x sur le long de l'aile en m
 x : list = [0.0,
  0.05373,
@@ -219,6 +222,30 @@ Facteur de sécurité en cisaillement : {600000/np.max(np.abs(contrainte_cisaill
 Facteur de sécurité en flexion avec un facteur de chargement de 3 : {(700000000/np.max(np.abs(contrainte_normale))/3):.2f}
 Facteur de sécurité en cisaillement avec un facteur de chargement de 3 : {(600000/np.max(np.abs(contrainte_cisaillement)))/3:.2f}
 """)
+
+profile_original = {
+    "aire profile": 0.0851101,
+    "périmètre profile": 2.0664,
+    "xc coeur": 0.40575,
+    "yc coeur": 0.053017,
+    "xc revêtement": 0.49251,
+    "yc revêtement": 0.046128
+}
+
+profile_calc = {
+    "aire profile": aile.area,
+    "perimetre_profile": aile.length,
+    "xc_coeur": aile.centroid.x,
+    "yc_coeur": aile.centroid.y,
+    "xc_rev": aile.centroid.x,
+    "yc_rev": aile.centroid.y
+}
+
+
+erreurs = { nom : calculer_erreurs(xx, xx_tilde) for nom, xx, xx_tilde in list(zip(profile_original.keys(), profile_original.values(), profile_calc.values()))}
+
+for nom, valeurs in erreurs.items():
+    print(f'erreur sur {nom} = {valeurs[0]:.4g}, {valeurs[1]:.4g} %')
 
 if show_plot == True:
     
