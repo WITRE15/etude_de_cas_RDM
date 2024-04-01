@@ -3,9 +3,10 @@ import numpy as np
 from scipy.integrate import cumtrapz
 from ast import literal_eval
 from shapely.geometry import Polygon
+from matplotlib.patches import Polygon as poly
 
-show_plot = False
-save_figs = True
+show_plot = True
+save_figs = False
 
 calculer_corde_aile = lambda longueur : -longueur*(133/755) + 0.606
 
@@ -148,6 +149,9 @@ coords_aile_x = coords_aile[::2]
 coords_aile_y = coords_aile[1::2]
 
 aile = Polygon(list(zip(coords_aile_x, coords_aile_y)))
+rev_aile = aile.buffer(0.00035)
+rev_aile = rev_aile.difference(aile)
+
 
 
 centroid_aile = aile.centroid
@@ -168,8 +172,9 @@ coords_aile_inf_y = [i[1] for i in coords_aile_inf]
 aile_inf = Polygon(list(zip(coords_aile_inf_x, coords_aile_inf_y)))
 centroid_aile_inf = aile_inf.centroid
 
-yc_c = 0.046128
-max_dist = max([(abs(y - yc_c) + 0.00035) for y in coords_aile_y])
+
+max_dist = max([(abs(y[1] - rev_aile.centroid.y)) for y in rev_aile.exterior.coords])
+print(max_dist)
 max_dist = max_dist*corde
 
 
@@ -230,6 +235,8 @@ profile_original = {
     "yc coeur": 0.053017,
     "xc revêtement": 0.49251,
     "yc revêtement": 0.046128
+
+
 }
 
 profile_calc = {
@@ -237,8 +244,8 @@ profile_calc = {
     "perimetre_profile": aile.length,
     "xc_coeur": aile.centroid.x,
     "yc_coeur": aile.centroid.y,
-    "xc_rev": aile.centroid.x,
-    "yc_rev": aile.centroid.y
+    "xc_rev": rev_aile.centroid.x,
+    "yc_rev": rev_aile.centroid.y
 }
 
 
@@ -247,38 +254,7 @@ erreurs = { nom : calculer_erreurs(xx, xx_tilde) for nom, xx, xx_tilde in list(z
 for nom, valeurs in erreurs.items():
     print(f'erreur sur {nom} = {valeurs[0]:.4g}, {valeurs[1]:.4g} %')
 
-if show_plot == True:
-    
-    fig2 = plt.figure()
-    fig2.canvas.manager.set_window_title("aile en 3D")
-    fig2.suptitle("aile en 3D")
-    ax = fig2.add_subplot(111, projection='3d')
-    ax.axis('equal')
-    coords_aile_x = np.array(coords_aile_x)
-    coords_aile_y = np.array(coords_aile_y)
-
-    for ci, z in zip(corde, x):
-    
-        x_scaled = coords_aile_x * ci
-        y_scaled = coords_aile_y * ci
-        
-        ax.plot(x_scaled, y_scaled, z, zdir='y')
-
-
-
-    fig4, axs4 = plt.subplots(1)
-    fig4.canvas.manager.set_window_title("centroides des différentes parties de l'aile")
-    fig4.suptitle("centroides des différentes parties de l'aile")
-    axs4.axis('equal')
-
-    axs4.plot(centroid_aile_inf.x, centroid_aile_inf.y, 'ro')
-    axs4.plot(centroid_aile.x, centroid_aile.y, 'bo')
-    axs4.plot(coords_aile_inf_x, coords_aile_inf_y, color='red')
-    axs4.plot(coords_aile_sup_x, coords_aile_sup_y, color='green')
-    axs4.plot(centroid_aile_sup.x, centroid_aile_sup.y,'go')
-    axs4.axhline(centroid_aile.y, color='black', linewidth=1.5)
-
-
+if show_plot:
 
     fig1, axs1 = plt.subplots(1, 2, constrained_layout=False, figsize=(10,5))
     fig1.canvas.manager.set_window_title("diagrames de réactions de l'aile - V et M")
@@ -300,7 +276,6 @@ if show_plot == True:
     axs1[1].axhline(0, color='black', linewidth=0.8)
     axs1[1].axvline(0, color='black', linewidth=0.8)
     axs1[1].grid(True)
-
     
     fig2, axs2 = plt.subplots(1, 2, constrained_layout=True, figsize=(10,5))
     fig2.canvas.manager.set_window_title("diagrames de réactions de l'aile - Contraintes")
@@ -323,8 +298,29 @@ if show_plot == True:
     axs2[1].axvline(0, color='black', linewidth=0.8)
     axs2[1].grid(True)
 
+    fig3, axs3 = plt.subplots(1)
+    fig3.canvas.manager.set_window_title("coeur et revetement de l'aile")
+    fig3.suptitle("coeur et revetement de l'aile")
+    axs3.axis('equal')
+    
+    axs3.add_patch(poly(rev_aile.exterior.coords, color="red"))
+    axs3.add_patch(poly(aile.exterior.coords))
+    axs3.autoscale_view()
+    axs3.plot(centroid_aile.x, centroid_aile.y, 'bo')
+    axs3.plot(rev_aile.centroid.x, rev_aile.centroid.y, 'ro')
 
-  
+
+    fig4, axs4 = plt.subplots(1)
+    fig4.canvas.manager.set_window_title("centroides des différentes parties de l'aile")
+    fig4.suptitle("centroides des différentes parties de l'aile")
+    axs4.axis('equal')
+    
+    axs4.plot(centroid_aile_inf.x, centroid_aile_inf.y, 'ro')
+    axs4.plot(coords_aile_inf_x, coords_aile_inf_y, color='red')
+    axs4.plot(coords_aile_sup_x, coords_aile_sup_y, color='green')
+    axs4.plot(centroid_aile_sup.x, centroid_aile_sup.y,'go')
+    axs4.axhline(centroid_aile.y, color='black', linewidth=1.5)
+
 
     fig5, axs5 = plt.subplots(1)
     fig5.canvas.manager.set_window_title("chargement en fonction de la position sur l'aile")
@@ -336,10 +332,29 @@ if show_plot == True:
     axs5.set_ylabel("chargement en N/m")
     axs5.grid(True)
 
-    fig1.savefig('figures/V_et_M.png')
-    fig2.savefig('figures/Contraintes.png')
-    fig4.savefig('figures/profile.png')
-    fig5.savefig('figures/chargement.png')
+
+    fig6 = plt.figure()
+    fig6.canvas.manager.set_window_title("aile en 3D")
+    fig6.suptitle("aile en 3D")
+    ax6 = fig6.add_subplot(111, projection='3d')
+    ax6.axis('equal')
+
+    coords_aile_x = np.array(coords_aile_x)
+    coords_aile_y = np.array(coords_aile_y)
+
+    for ci, z in zip(corde, x):
+    
+        x_scaled = coords_aile_x * ci
+        y_scaled = coords_aile_y * ci
+        
+        ax6.plot(x_scaled, y_scaled, z, zdir='y')
+
+    if save_figs:
+        fig1.savefig('figures/V_et_M.png')
+        fig2.savefig('figures/Contraintes.png')
+        fig3.savefig('figures/profile.png')
+        fig4.savefig('figures/profile_rev.png')
+        fig5.savefig('figures/chargement.png')
 
     plt.show()
 
