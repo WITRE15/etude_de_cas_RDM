@@ -6,7 +6,7 @@ from shapely.geometry import Polygon
 from matplotlib.patches import Polygon as poly
 
 show_plot = True
-save_figs = False
+save_figs = True
 
 calculer_corde_aile = lambda longueur : -longueur*(133/755) + 0.606
 
@@ -202,7 +202,7 @@ M = np.array(M)
 
 
 V = -V[-1] + V
-M = M[-1] - M
+M = -M[-1] + M
 
 
 contrainte_normale = calculer_contrainte_normale(M, I_revetement, max_dist)
@@ -308,6 +308,8 @@ if show_plot:
     axs3.autoscale_view()
     axs3.plot(centroid_aile.x, centroid_aile.y, 'bo')
     axs3.plot(rev_aile.centroid.x, rev_aile.centroid.y, 'ro')
+    axs3.set_ylabel('y/c')
+    axs3.set_xlabel('x/c')
 
 
     fig4, axs4 = plt.subplots(1)
@@ -320,6 +322,8 @@ if show_plot:
     axs4.plot(coords_aile_sup_x, coords_aile_sup_y, color='green')
     axs4.plot(centroid_aile_sup.x, centroid_aile_sup.y,'go')
     axs4.axhline(centroid_aile.y, color='black', linewidth=1.5)
+    axs4.set_ylabel('y/c')
+    axs4.set_xlabel('x/c')
 
 
     fig5, axs5 = plt.subplots(1)
@@ -352,8 +356,8 @@ if show_plot:
     if save_figs:
         fig1.savefig('figures/V_et_M.png')
         fig2.savefig('figures/Contraintes.png')
-        fig3.savefig('figures/profile.png')
-        fig4.savefig('figures/profile_rev.png')
+        fig3.savefig('figures/profile_rev.png')
+        fig4.savefig('figures/profile.png')
         fig5.savefig('figures/chargement.png')
 
     plt.show()
