@@ -173,14 +173,15 @@ aile_inf = Polygon(list(zip(coords_aile_inf_x, coords_aile_inf_y)))
 centroid_aile_inf = aile_inf.centroid
 
 
-max_dist = max([(abs(y[1] - rev_aile.centroid.y)) for y in rev_aile.exterior.coords])
-print(max_dist)
-max_dist = max_dist*corde
+max_dist_compression = max([(y[1] - rev_aile.centroid.y) for y in rev_aile.exterior.coords])
+max_dist_tension = abs(min([(y[1] - rev_aile.centroid.y) for y in rev_aile.exterior.coords]))
+max_dist_compression = max_dist_compression*corde
+max_dist_tension = max_dist_tension*corde
 
 
 
-Q_inf = aile_inf.area*abs(centroid_aile_inf.y - centroid_aile.y)
-Q_sup = aile_sup.area*abs(centroid_aile_sup.y - centroid_aile.y)
+Q_inf_c = aile_inf.area*abs(centroid_aile_inf.y - centroid_aile.y)
+Q_sup_c = aile_sup.area*abs(centroid_aile_sup.y - centroid_aile.y)
 
 
 I_revetement = 3.5e-4*0.0051752*corde**3
@@ -205,26 +206,29 @@ V = -V[-1] + V
 M = -M[-1] + M
 
 
-contrainte_normale = calculer_contrainte_normale(M, I_revetement, max_dist)
-
+contrainte_compression = calculer_contrainte_normale(M, I_revetement, max_dist_compression)
+contrainte_tension = calculer_contrainte_normale(M, I_revetement, max_dist_tension)
 contrainte_cisaillement = calculer_contrainte_cisaillement(V, Q_coeur_inf, I_coeur, t)
 
 print(f"""
 Force cisaillement max: {np.max(np.abs(V)):.5g} N.
 Moment fléchissant max: {np.max(np.abs(M)):.5g} Nm.
-Contrainte normale max: {np.max(np.abs(contrainte_normale)):.5g} Pa ({np.max(np.abs(contrainte_normale))/1e6:.5g} MPa).
+Contrainte de compression max: {np.max(np.abs(contrainte_compression)):.5g} Pa ({np.max(np.abs(contrainte_compression))/1e6:.5g} MPa).
+Contrainte de tension max: {np.max(np.abs(contrainte_tension)):.5g} Pa ({np.max(np.abs(contrainte_tension))/1e6:.5g} MPa).
 Contrainte cisaillement max: {np.max(np.abs(contrainte_cisaillement)):.5g} Pa ({np.max(np.abs(contrainte_cisaillement))/1e3:.5g} kPa).
 Centroïde aile/c: ({centroid_aile.x:.5g}, {centroid_aile.y:.5g}).
 Aire aile/c²: {aile.area:.5g} m².
 Aire section supérieure/c²: {aile_sup.area:.5g} m².
 Aire section inférieure/c²: {aile_inf.area:.5g} m².
-Q section supérieure/c³: {Q_sup:.5g}.
-Q section inférieure/c³: {Q_inf:.5g}.
+Q section supérieure/c³: {Q_sup_c:.5g}.
+Q section inférieure/c³: {Q_inf_c:.5g}.
 Largeur max au centroide/c: {np.max(t/corde):.5g} m.
-Distance max centroïde/c: {(max_dist/corde)[0]:.5g} m.
-Facteur de sécurité en flexion : {700000000/np.max(np.abs(contrainte_normale)):.2f}
+Distance max centroïde/c: {(max_dist_compression/corde)[0]:.5g} m.
+Facteur de sécurité en compression : {700000000/np.max(np.abs(contrainte_compression)):.2f}
+Facteur de sécurité en compression : {800000000/np.max(np.abs(contrainte_tension)):.2f}
 Facteur de sécurité en cisaillement : {600000/np.max(np.abs(contrainte_cisaillement)):.2f}
-Facteur de sécurité en flexion avec un facteur de chargement de 3 : {(700000000/np.max(np.abs(contrainte_normale))/3):.2f}
+Facteur de sécurité en compression avec un facteur de chargement de 3 : {(700000000/np.max(np.abs(contrainte_compression))/3):.2f}
+Facteur de sécurité en compression avec un facteur de chargement de 3 : {(800000000/np.max(np.abs(contrainte_tension))/3):.2f}
 Facteur de sécurité en cisaillement avec un facteur de chargement de 3 : {(600000/np.max(np.abs(contrainte_cisaillement)))/3:.2f}
 """)
 
@@ -290,13 +294,15 @@ if show_plot:
     axs2[0].grid(True)
 
     # Contrainte Normale Plot
-    axs2[1].plot(x, contrainte_normale/1e6)
+    axs2[1].plot(x, contrainte_compression/1e6, label='contrainte de compression')
+    axs2[1].plot(x, contrainte_tension/1e6, label='contrainte de tension')
     axs2[1].set_title('contrainte normale')
     axs2[1].set_ylabel('Mpa')
     axs2[1].set_xlabel('x (m)')
     axs2[1].axhline(0, color='black', linewidth=0.8)
     axs2[1].axvline(0, color='black', linewidth=0.8)
     axs2[1].grid(True)
+    axs2[1].legend()
 
     fig3, axs3 = plt.subplots(1)
     fig3.canvas.manager.set_window_title("coeur et revetement de l'aile")
