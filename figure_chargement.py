@@ -70,13 +70,13 @@ dx = np.zeros_like(start_points_x)
 dy = -start_points_y      
 
 plt.fill_between(([0,x[-1]]), 0, -20)
-plt.quiver(-0.05, -20 , 0, 20, color='r', angles='xy', scale_units='xy', scale=1, label='force de réaction')
-plt.quiver(start_points_x, start_points_y, dx, dy, color='b', angles='xy', scale_units='xy', scale=1, label='chargement')
+plt.quiver(-0.05, -20 , 0, 20, color='r', angles='xy', scale_units='xy', scale=1, label='Force de réaction')
+plt.quiver(start_points_x, start_points_y, dx, dy, color='b', angles='xy', scale_units='xy', scale=1, label='Chargement')
 curved_arrow = patches.FancyArrowPatch((-0.095, 0), (-0.095, -20),
                                        connectionstyle="arc3,rad=-0.4",
                                        arrowstyle="Simple,tail_width=1.5,head_width=6,head_length=10",
                                        color="green",
-                                       label='moment de réaction')
+                                       label='Moment de réaction')
 plt.gca().add_patch(curved_arrow)
 plt.gca().invert_yaxis()
 plt.legend(loc='lower right')

@@ -236,6 +236,7 @@ Facteur de sécurité en tension avec un facteur de chargement de 3 : {(80000000
 Facteur de sécurité en cisaillement avec un facteur de chargement de 3 : {(600000/np.max(np.abs(contrainte_cisaillement)))/3:.2f}
 """)
 
+
 #MARK: erreurs modélisation
 
 profile_original = {
@@ -267,10 +268,10 @@ for nom, valeurs in erreurs.items():
 if show_plot:
 
     fig1, axs1 = plt.subplots(1, 2, constrained_layout=False, figsize=(10,5))
-    fig1.canvas.manager.set_window_title("diagrames de réactions de l'aile - V et M")
-    fig1.suptitle("diagrames de réactions de l'aile - V et M")
+    fig1.canvas.manager.set_window_title("Diagrames de réactions de l'aile - V et M")
+    fig1.suptitle("Diagrames de réactions de l'aile - V et M")
     # V Plot
-    axs1[0].plot(x, V)
+    axs1[0].plot(x, abs(V))
     axs1[0].set_title('V')
     axs1[0].set_ylabel('N')
     axs1[0].set_xlabel('x (m)')
@@ -279,7 +280,7 @@ if show_plot:
     axs1[0].grid(True)
 
     # M Plot
-    axs1[1].plot(x, M)
+    axs1[1].plot(x, abs(M))
     axs1[1].set_title('M')
     axs1[1].set_ylabel('Nm')
     axs1[1].set_xlabel('x (m)')
@@ -288,11 +289,11 @@ if show_plot:
     axs1[1].grid(True)
     
     fig2, axs2 = plt.subplots(1, 2, constrained_layout=True, figsize=(10,5))
-    fig2.canvas.manager.set_window_title("diagrames de réactions de l'aile - Contraintes")
-    fig2.suptitle("diagrames de réactions de l'aile - Contraintes")
+    fig2.canvas.manager.set_window_title("Diagrames de réactions de l'aile - Contraintes")
+    fig2.suptitle("Diagrames de réactions de l'aile - Contraintes")
     # Contrainte Cisaillement Plot
-    axs2[0].plot(x, contrainte_cisaillement/1e3)
-    axs2[0].set_title('contrainte cisaillement')
+    axs2[0].plot(x, abs(contrainte_cisaillement/1e3))
+    axs2[0].set_title('Contrainte de cisaillement')
     axs2[0].set_ylabel('kpa')
     axs2[0].set_xlabel('x (m)')
     axs2[0].axhline(0, color='black', linewidth=0.8)
@@ -302,15 +303,15 @@ if show_plot:
     #contrainte normal plot
     contrainte_compression_max = contrainte_compression[np.argmax(contrainte_compression)]/1e6
     xmax_compression = x[np.argmax(contrainte_compression)]
-    axs2[1].plot(x, contrainte_compression/1e6, color='blue', label='contrainte de compression')
-    axs2[1].plot(xmax_compression, contrainte_compression_max, 'bo', label=r"($x, \sigma_{max}$)"+f' = ({xmax_compression:.4g}m, {contrainte_compression_max:.4g}Mpa)')
+    axs2[1].plot(x, contrainte_compression/1e6, color='red', label='Contrainte de compression')
+    axs2[1].plot(xmax_compression, contrainte_compression_max, 'ro', label=r"($x, \sigma_{max}$)"+f' = ({xmax_compression:.4g}m, {contrainte_compression_max:.4g}Mpa)')
 
     contrainte_tension_max = contrainte_tension[np.argmax(contrainte_tension)]/1e6
     xmax_tension = x[np.argmax(contrainte_tension)]
-    axs2[1].plot(x, contrainte_tension/1e6, color='red', label='contrainte de tension')
-    axs2[1].plot(xmax_tension, contrainte_tension_max, 'ro', label=r"($x, \sigma_{max}$)"+ f' = ({xmax_tension:.4g}m, {contrainte_tension_max:.4g}Mpa)')
+    axs2[1].plot(x, contrainte_tension/1e6, color='blue', label='Contrainte de tension')
+    axs2[1].plot(xmax_tension, contrainte_tension_max, 'bo', label=r"($x, \sigma_{max}$)"+ f' = ({xmax_tension:.4g}m, {contrainte_tension_max:.4g}Mpa)')
 
-    axs2[1].set_title('contrainte normale')
+    axs2[1].set_title('Contrainte normale')
     axs2[1].set_ylabel('Mpa')
     axs2[1].set_xlabel('x (m)')
     axs2[1].axhline(0, color='black', linewidth=0.8)
@@ -319,8 +320,8 @@ if show_plot:
     axs2[1].legend()
 
     fig3, axs3 = plt.subplots(1)
-    fig3.canvas.manager.set_window_title("coeur et revetement de l'aile")
-    fig3.suptitle("coeur et revetement de l'aile")
+    fig3.canvas.manager.set_window_title("Coeur et revêtement de l'aile")
+    fig3.suptitle("Coeur et revêtement de l'aile")
     axs3.axis('equal')
     
     axs3.add_patch(poly(rev_aile.exterior.coords, color="red"))
@@ -333,8 +334,8 @@ if show_plot:
 
 
     fig4, axs4 = plt.subplots(1)
-    fig4.canvas.manager.set_window_title("centroides des différentes parties de l'aile")
-    fig4.suptitle("centroides des différentes parties de l'aile")
+    fig4.canvas.manager.set_window_title("Centroïde des différentes parties de l'aile")
+    fig4.suptitle("Centroïde des différentes parties de l'aile")
     axs4.axis('equal')
     
     axs4.plot(centroid_aile_inf.x, centroid_aile_inf.y, 'ro')
@@ -347,13 +348,13 @@ if show_plot:
 
 
     fig5, axs5 = plt.subplots(1)
-    fig5.canvas.manager.set_window_title("chargement en fonction de la position sur l'aile")
-    fig5.suptitle("chargement en fonction de la position sur l'aile")
+    fig5.canvas.manager.set_window_title("Chargement en fonction de la position sur l'aile")
+    fig5.suptitle("Chargement en fonction de la position sur l'aile")
     axs5.plot(x, w)
     axs5.axhline(0, color='black', linewidth=0.8)
     axs5.axvline(0, color='black', linewidth=0.8)
-    axs5.set_xlabel("position sur l'aile en m")
-    axs5.set_ylabel("chargement en N/m")
+    axs5.set_xlabel("Position sur l'aile en m")
+    axs5.set_ylabel("Chargement en N/m")
     axs5.grid(True)
 
 
