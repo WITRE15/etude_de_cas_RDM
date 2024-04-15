@@ -7,7 +7,7 @@ from matplotlib.patches import Polygon as poly
 
 show_plot = True
 save_figs = True
-
+# MARK: définition des fonctions
 calculer_corde_aile = lambda longueur : -longueur*(133/755) + 0.606
 
 calculer_contrainte_normale = lambda M, I, C, :-(M*C)/(I)
@@ -15,6 +15,8 @@ calculer_contrainte_normale = lambda M, I, C, :-(M*C)/(I)
 calculer_contrainte_cisaillement = lambda V, Q, I, t : (V*Q)/(I*t)
 
 calculer_erreurs = lambda x, x_tilde : (abs(x - x_tilde), abs((x-x_tilde)/x)*100)
+
+#MARK: transformation des données pour traitement
 
 #x sur le long de l'aile en m
 x : list = [0.0,
@@ -148,15 +150,13 @@ coords_aile = literal_eval('[' + coords_aile + ']')
 coords_aile_x = coords_aile[::2]
 coords_aile_y = coords_aile[1::2]
 
+#MARK: création des polygones
+
 aile = Polygon(list(zip(coords_aile_x, coords_aile_y)))
 rev_aile = aile.buffer(0.00035)
 rev_aile = rev_aile.difference(aile)
 
-
-
 centroid_aile = aile.centroid
-
-
 
 coords_aile_sup = [(x, y) if y > centroid_aile.y else (x, centroid_aile.y) for x, y in list(zip(coords_aile_x, coords_aile_y))]
 #coords_aile_sup = [(x, y) for x, y in list(zip(coords_aile_x, coords_aile_y)) if y > centroid_aile.y]
@@ -172,6 +172,8 @@ coords_aile_inf_y = [i[1] for i in coords_aile_inf]
 aile_inf = Polygon(list(zip(coords_aile_inf_x, coords_aile_inf_y)))
 centroid_aile_inf = aile_inf.centroid
 
+
+#MARK: calcul des variables pour sigma et tau
 
 max_dist_compression = max([(y[1] - rev_aile.centroid.y) for y in rev_aile.exterior.coords])
 max_dist_tension = abs(min([(y[1] - rev_aile.centroid.y) for y in rev_aile.exterior.coords]))
@@ -194,6 +196,7 @@ maskt = np.isclose(np.full_like(coords_aile_y, centroid_aile.y), coords_aile_y, 
 t = np.array(coords_aile_x)[maskt]
 t = abs(t[0]-t[1])*corde
 
+#MARK: détermination V et M
 
 V = cumtrapz(w, x, initial=0)
 M = cumtrapz(V, x, initial=0)
@@ -205,6 +208,7 @@ M = np.array(M)
 V = -V[-1] + V
 M = -M[-1] + M
 
+#MARK: calcul contraintes et print
 
 contrainte_compression = calculer_contrainte_normale(M, I_revetement, max_dist_compression)
 contrainte_tension = calculer_contrainte_normale(M, I_revetement, max_dist_tension)
@@ -225,12 +229,14 @@ Q section inférieure/c³: {Q_inf_c:.5g}.
 Largeur max au centroide/c: {np.max(t/corde):.5g} m.
 Distance max centroïde/c: {(max_dist_compression/corde)[0]:.5g} m.
 Facteur de sécurité en compression : {700000000/np.max(np.abs(contrainte_compression)):.2f}
-Facteur de sécurité en compression : {800000000/np.max(np.abs(contrainte_tension)):.2f}
+Facteur de sécurité en tension : {800000000/np.max(np.abs(contrainte_tension)):.2f}
 Facteur de sécurité en cisaillement : {600000/np.max(np.abs(contrainte_cisaillement)):.2f}
 Facteur de sécurité en compression avec un facteur de chargement de 3 : {(700000000/np.max(np.abs(contrainte_compression))/3):.2f}
-Facteur de sécurité en compression avec un facteur de chargement de 3 : {(800000000/np.max(np.abs(contrainte_tension))/3):.2f}
+Facteur de sécurité en tension avec un facteur de chargement de 3 : {(800000000/np.max(np.abs(contrainte_tension))/3):.2f}
 Facteur de sécurité en cisaillement avec un facteur de chargement de 3 : {(600000/np.max(np.abs(contrainte_cisaillement)))/3:.2f}
 """)
+
+#MARK: erreurs modélisation
 
 profile_original = {
     "aire profile": 0.0851101,
@@ -257,7 +263,7 @@ erreurs = { nom : calculer_erreurs(xx, xx_tilde) for nom, xx, xx_tilde in list(z
 
 for nom, valeurs in erreurs.items():
     print(f'erreur sur {nom} = {valeurs[0]:.4g}, {valeurs[1]:.4g} %')
-
+# MARK: graphiques
 if show_plot:
 
     fig1, axs1 = plt.subplots(1, 2, constrained_layout=False, figsize=(10,5))
@@ -293,9 +299,17 @@ if show_plot:
     axs2[0].axvline(0, color='black', linewidth=0.8)
     axs2[0].grid(True)
 
-    # Contrainte Normale Plot
-    axs2[1].plot(x, contrainte_compression/1e6, label='contrainte de compression')
-    axs2[1].plot(x, contrainte_tension/1e6, label='contrainte de tension')
+    #contrainte normal plot
+    contrainte_compression_max = contrainte_compression[np.argmax(contrainte_compression)]/1e6
+    xmax_compression = x[np.argmax(contrainte_compression)]
+    axs2[1].plot(x, contrainte_compression/1e6, color='blue', label='contrainte de compression')
+    axs2[1].plot(xmax_compression, contrainte_compression_max, 'bo', label=r"($x, \sigma_{max}$)"+f' = ({xmax_compression:.4g}m, {contrainte_compression_max:.4g}Mpa)')
+
+    contrainte_tension_max = contrainte_tension[np.argmax(contrainte_tension)]/1e6
+    xmax_tension = x[np.argmax(contrainte_tension)]
+    axs2[1].plot(x, contrainte_tension/1e6, color='red', label='contrainte de tension')
+    axs2[1].plot(xmax_tension, contrainte_tension_max, 'ro', label=r"($x, \sigma_{max}$)"+ f' = ({xmax_tension:.4g}m, {contrainte_tension_max:.4g}Mpa)')
+
     axs2[1].set_title('contrainte normale')
     axs2[1].set_ylabel('Mpa')
     axs2[1].set_xlabel('x (m)')
@@ -343,21 +357,23 @@ if show_plot:
     axs5.grid(True)
 
 
-    fig6 = plt.figure()
-    fig6.canvas.manager.set_window_title("aile en 3D")
-    fig6.suptitle("aile en 3D")
-    ax6 = fig6.add_subplot(111, projection='3d')
-    ax6.axis('equal')
+#plot de laile en
+   # fig6 = plt.figure()
+   # fig6.canvas.manager.set_window_title("aile en 3D")
+   # fig6.suptitle("aile en 3D")
+   # ax6 = fig6.add_subplot(111, projection='3d')
+   # ax6.axis('equal')
 
-    coords_aile_x = np.array(coords_aile_x)
-    coords_aile_y = np.array(coords_aile_y)
+   # coords_aile_x = np.array(coords_aile_x)
+#coords_aile_y = np.array(coords_aile_y)
 
-    for ci, z in zip(corde, x):
+   # for ci, z in zip(corde, x):
     
-        x_scaled = coords_aile_x * ci
-        y_scaled = coords_aile_y * ci
+   #     x_scaled = coords_aile_x * ci
+   #     y_scaled = coords_aile_y * ci
         
-        ax6.plot(x_scaled, y_scaled, z, zdir='y')
+   #     ax6.plot(x_scaled, y_scaled, z, zdir='y')
+        
 
     if save_figs:
         fig1.savefig('figures/V_et_M.png')
