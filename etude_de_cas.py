@@ -199,14 +199,12 @@ t = abs(t[0]-t[1])*corde
 #MARK: détermination V et M
 
 V = cumtrapz(w, x, initial=0)
-M = cumtrapz(V, x, initial=0)
-
 V = np.array(V)
-M = np.array(M)
-
-
 V = -V[-1] + V
-M = -M[-1] + M
+
+M = cumtrapz(V, x, initial=0)
+M = np.array(M)
+M = M[-1] - M
 
 #MARK: calcul contraintes et print
 
@@ -292,15 +290,19 @@ if show_plot:
     fig2.canvas.manager.set_window_title("Diagrames de réactions de l'aile - Contraintes")
     fig2.suptitle("Diagrames de réactions de l'aile - Contraintes")
     # Contrainte Cisaillement Plot
-    axs2[0].plot(x, abs(contrainte_cisaillement/1e3))
+    axs2[0].axhline(0, color='black', linewidth=0.8)
+    axs2[0].axvline(0, color='black', linewidth=0.8)
+    axs2[0].plot(x, abs(contrainte_cisaillement/1e3), label='Contrainte de cisaillement', color='orange')
+    axs2[0].plot(0, max(abs(contrainte_cisaillement/1e3)), 'o', color='orange', label=r"($x, \tau_{max}$)"+f' = (0m, {max(abs(contrainte_cisaillement/1e3)):.4g}Kpa)')
     axs2[0].set_title('Contrainte de cisaillement')
     axs2[0].set_ylabel('kpa')
     axs2[0].set_xlabel('x (m)')
-    axs2[0].axhline(0, color='black', linewidth=0.8)
-    axs2[0].axvline(0, color='black', linewidth=0.8)
     axs2[0].grid(True)
+    axs2[0].legend()
 
     #contrainte normal plot
+    axs2[1].axhline(0, color='black', linewidth=0.8)
+    axs2[1].axvline(0, color='black', linewidth=0.8)
     contrainte_compression_max = contrainte_compression[np.argmax(contrainte_compression)]/1e6
     xmax_compression = x[np.argmax(contrainte_compression)]
     axs2[1].plot(x, contrainte_compression/1e6, color='red', label='Contrainte de compression')
@@ -314,8 +316,6 @@ if show_plot:
     axs2[1].set_title('Contrainte normale')
     axs2[1].set_ylabel('Mpa')
     axs2[1].set_xlabel('x (m)')
-    axs2[1].axhline(0, color='black', linewidth=0.8)
-    axs2[1].axvline(0, color='black', linewidth=0.8)
     axs2[1].grid(True)
     axs2[1].legend()
 
