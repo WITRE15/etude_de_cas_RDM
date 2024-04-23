@@ -261,13 +261,14 @@ profile_calc = {
 erreurs = { nom : calculer_erreurs(xx, xx_tilde) for nom, xx, xx_tilde in list(zip(profile_original.keys(), profile_original.values(), profile_calc.values()))}
 
 for nom, valeurs in erreurs.items():
-    print(f'erreur sur {nom} = {valeurs[0]:.4g}, {valeurs[1]:.4g} %')
+    print(f'Erreur sur {nom} = {valeurs[0]:.4g}, {valeurs[1]:.4g} %')
+print(f'Différence des Q = {calculer_erreurs(Q_inf_c, Q_sup_c)[0]},  {calculer_erreurs(Q_inf_c, Q_sup_c)[1]}%')
 # MARK: graphiques
 if show_plot:
 
     fig1, axs1 = plt.subplots(1, 2, constrained_layout=False, figsize=(10,5))
-    fig1.canvas.manager.set_window_title("Diagrames de réactions de l'aile - V et M")
-    fig1.suptitle("Diagrames de réactions de l'aile - V et M")
+    fig1.canvas.manager.set_window_title("Diagrammes de réactions de l'aile - V et M")
+    fig1.suptitle("Diagrammes de réactions de l'aile - V et M")
     # V Plot
     axs1[0].plot(x, abs(V))
     axs1[0].set_title('V')
@@ -287,8 +288,8 @@ if show_plot:
     axs1[1].grid(True)
     
     fig2, axs2 = plt.subplots(1, 2, constrained_layout=True, figsize=(10,5))
-    fig2.canvas.manager.set_window_title("Diagrames de réactions de l'aile - Contraintes")
-    fig2.suptitle("Diagrames de réactions de l'aile - Contraintes")
+    fig2.canvas.manager.set_window_title("Diagrammes de réactions de l'aile - Contraintes")
+    fig2.suptitle("Diagrammes de réactions de l'aile - Contraintes")
     # Contrainte Cisaillement Plot
     axs2[0].axhline(0, color='black', linewidth=0.8)
     axs2[0].axvline(0, color='black', linewidth=0.8)
@@ -384,8 +385,3 @@ if show_plot:
         fig5.savefig('figures/chargement.png')
 
     plt.show()
-
-
-
-
-
